@@ -107,7 +107,20 @@ class Wheeltec:
         self.cmdVelocityPublisher.publish(self.cmdVelocityMsg)
 
 
-    def cmdPosition(self, pos, yaw=360, forward=True):
+    def cmdPosition(self, pos, yaw):
+        """Sends a streaming command of absolute position and yaw setpoint.
+            Maximum velocity is 1.0 m/s.
+            Maximum yaw rate is pi/2 rad/s.
+
+        Args:
+            pos (array-like of float[2]): Position. Meters.
+            yaw (float): Yaw angle[-pi,pi]. Radians.
+        """
+        pass
+
+
+
+    def cmdPosition_turnandrun(self, pos, yaw=360, forward=True):
         """Sends a streaming command of absolute position and yaw setpoint.
         Moving velocity = 0.5 m/s.
 
