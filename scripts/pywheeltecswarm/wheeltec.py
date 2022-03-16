@@ -122,7 +122,9 @@ class Wheeltec:
 
     def cmdPosition_turnandrun(self, pos, yaw=360, forward=True):
         """Sends a streaming command of absolute position and yaw setpoint.
-        Moving velocity = 0.5 m/s.
+            Motion mode:turn and run.
+            Maximum velocity is 1.0 m/s.
+            Maximum yaw rate is pi/2 rad/s.
 
         Args:
             pos (array-like of float[2]): Position. Meters.
