@@ -8,6 +8,26 @@ import numpy as np
 from tf import TransformListener
 from geometry_msgs.msg import TwistStamped,PoseStamped,Twist
 
+
+class Controller:
+    def __init__(self, K_rho, K_alpha, K_beta):
+        self.K_rho = K_rho
+        self.K_alpha = K_alpha
+        self.K_beta = K_beta
+
+    def control_command(self, delta_x, delta_y, theta, target_theta):
+        rho = (delta_x**2 + delta_y**2)**0.5
+        alpha = (np.arctan2(delta_y, delta_x) - theta + np.pi) % (2*np.pi) - np.pi
+        beta = (target_theta - theta - alpha + np.pi) % (2*np.pi) - np.pi
+        vel = self.K_rho*rho
+        yawRate = self.K_alpha*alpha - self.K_beta*beta
+
+        if alpha>np.pi/2 or alpha<-np.pi/2:
+            vel = -vel
+            
+        return rho, vel, yawRate
+
+
 class TimeHelper:
     """Object containing all time-related functionality.
     
@@ -111,13 +131,46 @@ class Wheeltec:
         """Sends a streaming command of absolute position and yaw setpoint.
             Maximum velocity is 1.0 m/s.
             Maximum yaw rate is pi/2 rad/s.
-
-        Args:
+            Args:
             pos (array-like of float[2]): Position. Meters.
-            yaw (float): Yaw angle[-pi,pi]. Radians.
+            yaw (float)
+        : Yaw angle[-pi,pi]. Radians.
         """
-        pass
+        max_velocity = 1.0
+        min_velocity = 0.05
+        max_yew_rate = np.pi / 2
+        dt = 0.2
+        
+        target_x = pos[0]
+        target_y = pos[1]
+        target_theta = yaw
+    
+        while rho > 0.1:
+        
+            current_pose = position()
+            x = current_pose[0]
+            y = current_pose[1]
+            theta = current_pose[2]
+            
+            delta_x = target_x - x
+            delta_y = target_y - y
 
+            rho, vel, yawRate = Controller(5, 8, 2).control_command(delta_x, delta_y, theta, target_theta)
+
+            if abs(vel) > max_velocity:
+                vel = np.sign(v)*max_velocity
+            if abs(yewRate) > max_yew_rate:
+                yewRate = np.sign(yewRate)*max_yaw_rate
+            if abs(vel) < min_velocity:
+                vel = np.sign(v)*min_velocity
+
+
+            cmdVelocity(self, vel, yawRate)
+            rospy.sleep(dt)
+            
+            #x = x + vel*np.cos(theta)*dt
+            #y = y + vel*np.sin(theta)*dt
+            #theta = theta + yawRate*dt
 
 
     def cmdPosition_turnandrun(self, pos, yaw=360, forward=True):
